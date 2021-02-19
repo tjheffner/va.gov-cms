@@ -6,6 +6,7 @@ use Drupal\Core\Config\StorageInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountSwitcherInterface;
+use Drupal\Core\State\StateInterface;
 use Drupal\file\FileInterface;
 use Drupal\tome_sync\Event\ContentCrudEvent;
 use Drupal\tome_sync\Event\TomeSyncEvents;
@@ -39,18 +40,11 @@ class TomeExporter extends Exporter {
   ];
 
   /**
-   * The BreadcrumbEntity Manager.
+   * State Interface
    *
-   * @var \Drupal\va_gov_content_export\AddBreadcrumbToEntity
+   * @var \Drupal\Core\State\StateInterface
    */
-  protected $addBreadcrumbToEntity;
-
-  /**
-   * The ListDataCompiler Service.
-   *
-   * @var \Drupal\va_gov_content_export\ListDataCompiler
-   */
-  protected $listDataCompiler;
+  protected $state;
 
   /**
    * Creates an Exporter object.
@@ -81,60 +75,24 @@ class TomeExporter extends Exporter {
     EventDispatcherInterface $event_dispatcher,
     AccountSwitcherInterface $account_switcher,
     FileSyncInterface $file_sync,
-    AddBreadcrumbToEntity $add_breadcrumb_to_entity,
-    ListDataCompiler $list_data_compiler
+    StateInterface $state
   ) {
     parent::__construct($content_storage, $serializer, $entity_type_manager,
       $event_dispatcher, $account_switcher, $file_sync);
 
-    $this->addBreadcrumbToEntity = $add_breadcrumb_to_entity;
-    $this->listDataCompiler = $list_data_compiler;
+    $this->state = $state;
   }
 
   /**
    * {@inheritDoc}
    */
   public function exportContent(ContentEntityInterface $entity) {
-    $type = $entity->getEntityTypeId();
-    // If it's a node, attach the bundle.
-    $type = ($type === 'node') ? "{$type}.{$entity->bundle()}" : $type;
-    if (in_array($type, static::$excludedTypes, TRUE)) {
+    $shouldExport = $this->state->get('va_gov.content_export_enable', TRUE);
+    if (!$shouldExport) {
       return;
     }
 
-    // We override all of the parent export to not create the index file.
-    $this->switchToAdmin();
-    $this->addBreadcrumbToEntity->alterEntity($entity);
-    $this->listDataCompiler->updateReverseEntityReferenceLists($entity, $this);
-    $data = $this->serializer->normalize($entity, 'json');
-    $this->contentStorage->write(TomeSyncHelper::getContentName($entity), $data);
-
-    if ($entity instanceof FileInterface) {
-      $this->fileSync->exportFile($entity);
-    }
-    $event = new ContentCrudEvent($entity);
-    $this->eventDispatcher->dispatch(TomeSyncEvents::EXPORT_CONTENT, $event);
-    $this->switchBack();
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * Overriding to remove the updating of the index file.
-   */
-  public function deleteContentExport(ContentEntityInterface $entity) {
-    // It would be cool if hook_entity_translation_delete() is invoked for
-    // every translation of an entity when it's deleted. But it isn't. :-(.
-    foreach (array_keys($entity->getTranslationLanguages()) as $langcode) {
-      $this->contentStorage->delete(TomeSyncHelper::getContentName($entity->getTranslation($langcode)));
-    }
-    // There may have been reverse entity references that need to be updated.
-    $this->listDataCompiler->updateReverseEntityReferenceLists($entity, $this);
-    if ($entity instanceof FileInterface) {
-      $this->fileSync->deleteFileExport($entity);
-    }
-    $event = new ContentCrudEvent($entity);
-    $this->eventDispatcher->dispatch(TomeSyncEvents::DELETE_CONTENT, $event);
+    parent::exportContent($entity);
   }
 
 }

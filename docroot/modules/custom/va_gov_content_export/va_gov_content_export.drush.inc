@@ -36,6 +36,22 @@ function va_gov_content_export_drush_command() {
     ],
   ];
 
+  $items['va-gov-cms-import-content'] = [
+    'description' => 'Import Content using CMS Export',
+    'arguments' => [
+      'chunk' => 'A comma separated list of ID pairs in the format entity_type_id:id.',
+    ],
+    'required-arguments' => TRUE,
+  ];
+
+  $items['va-gov-cms-import-all-content'] = [
+    'description' => 'Import all content using CMS Export',
+    'options' => [
+      'process-count' => 'Limits the number of processes to run concurrently.',
+      'entity-count' => 'The number of entities to export per process.',
+    ],
+  ];
+
   $items['va-gov-get-deploy-mode'] = [
     'description' => 'Get the deploy mode.',
   ];
@@ -121,6 +137,43 @@ function drush_va_gov_content_export_va_gov_get_deploy_mode() {
   $site_state = \Drupal::getContainer()->get('va_gov.site_status');
   $site_status = $site_state->inDeployMode() ? 'ENABLED' : 'DISABLED';
   drush_log($site_status, LogLevel::OK);
+}
+
+/**
+ * Drush command to import all entites.
+ */
+function drush_va_gov_content_export_va_gov_cms_import_all_content() {
+  $process_count = drush_get_option('process-count', 1);
+  $entity_count = drush_get_option('entity-count', 200);
+
+  $command = \Drupal::service('va_gov.content_export.import_all_command');
+
+  $errors = $command->run($entity_count, $process_count);
+
+  foreach ($errors as $error) {
+    drush_log($error, LogLevel::ERROR);
+  }
+
+  if (!$errors) {
+    drush_log('Exported config, content, and files.', LogLevel::SUCCESS);
+  }
+}
+
+/**
+ * Drush command to import content
+ */
+function drush_va_gov_content_export_va_gov_cms_import_content($chunk) {
+  $names = explode(',', $chunk);
+
+  try {
+    $importer = \Drupal::service('va_gov.content_export.import_command');
+    $importer->run($names);
+  }
+  catch (ExportCommandException $e) {
+    drush_log($e->getMessage(), LogLevel::ERROR);
+  }
+
+  drush_log('Export Content Command Complete', LogLevel::OK);
 }
 
 /**

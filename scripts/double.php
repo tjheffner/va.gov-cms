@@ -2,40 +2,28 @@
 
 
 $uuid_generator = \Drupal::getContainer()->get('uuid');
+$state = \Drupal::getContainer()->get('state');
 
-$entity_map = getContentToExport();
+$state->set('va_gov.content_export_enable', FALSE);
+echo 'Tome Sync Disabled' . PHP_EOL;
+
+echo 'Gathering content' . PHP_EOL;
+$entity_map = \Drupal::getContainer()->get('tome_sync.exporter')->getContentToExport();
 
 foreach ($entity_map as $entity_type_id => $ids) {
   $loader = Drupal::entityTypeManager()->getStorage($entity_type_id);
+  echo 'Updating uuid for ' . $entity_type_id . PHP_EOL;
   foreach (array_chunk($ids, 200) as $chunk) {
+    echo '.';
     $entities = $loader->loadMultiple($chunk);
     foreach ($entities as $entity) {
       $entity->set('uuid', $uuid_generator->generate());
       $entity->save();
     }
   }
+  echo PHP_EOL;
 }
 
-function getContentToExport() {
-  $entities = [];
-  $entity_type_manager = \Drupal::entityTypeManager();
-  $excludedTypes = [
-    'content_moderation_state',
-    'crop',
-    'path_alias',
-    'site_alert',
-    'user_history',
-    'user_role',
-    'user',
-  ];
+$state->set('va_gov.content_export_enable', TRUE);
 
-
-  $definitions = array_diff_key($entity_type_manager->getDefinitions(), array_flip($excludedTypes));
-  foreach ($definitions as $entity_type) {
-    if (is_a($entity_type->getClass(), '\Drupal\Core\Entity\ContentEntityInterface', TRUE)) {
-      $storage = $entity_type_manager->getStorage($entity_type->id());
-      $entities[$entity_type->id()] = $storage->getQuery()->execute();
-    }
-  }
-  return $entities;
-}
+echo 'Complete';

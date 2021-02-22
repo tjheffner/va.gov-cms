@@ -27,3 +27,9 @@ services:
   va_gov.site_status:
     class: Drupal\va_gov_content_export\SiteStatus\SiteStatus
     arguments: ['@state']
+  va_gov.content_export.import_all_command:
+    class: Drupal\va_gov_content_export\ImportCommand\ImportCommand
+    arguments: [ '@tome_sync.importer', '@event_dispatcher', '@va_gov.content_export.executable_finder' ]
+  va_gov.content_export.import_command:
+    class: Drupal\va_gov_content_export\ImportCommand\ImportContentCommand
+    arguments: ['@tome_sync.importer']

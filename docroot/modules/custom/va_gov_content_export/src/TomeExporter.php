@@ -37,6 +37,16 @@ class TomeExporter extends Exporter {
     'user_history',
     'user_role',
     'user',
+    'menu_link_content',
+    'redirect',
+    'search_api_task',
+    'oauth2_token',
+    'webform_submission',
+    'entity_subqueue',
+    'consumer',
+    'entity_embed_fake_entity',
+    'file',
+    'media',
   ];
 
   /**

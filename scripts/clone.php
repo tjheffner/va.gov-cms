@@ -5,6 +5,8 @@ use Drupal\entity_clone\Event\EntityCloneEvents;
 
 echo 'Loading content' . PHP_EOL;
 //$content = views_get_view_result('taxonomy_term', 'page_1', 'visn-2');
+$state = \Drupal::getContainer()->get('state');
+$state->set('va_gov.content_export_enable', FALSE);
 
 $query = \Drupal::entityQuery('node');
 $query->condition('field_administration.target_id', [247, 251, 248, 252, 253, 254, 255, 249, 250], 'IN');

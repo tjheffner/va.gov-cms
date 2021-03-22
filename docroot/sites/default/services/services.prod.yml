@@ -1,0 +1,4 @@
+services:
+  mysql.entity.query.sql:
+    class: Drupal\Core\Entity\Query\Sql\QueryFactory
+    arguments: ['@database.replica']

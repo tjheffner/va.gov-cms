@@ -38,3 +38,15 @@ $settings['trusted_host_patterns'] = [
 
 $settings['va_gov_frontend_build_type'] = 'brd';
 $settings['va_gov_frontend_url'] = 'https://www.va.gov';
+
+$settings['container_yamls'][] = $app_root . '/' . $site_path . '/services/services.prod.yml';
+
+if (getenv('CMS_MARIADB_HOST_REPLICA_1')) {
+  $databases['default']['replica'][] = array(
+    'driver' => 'mysql',
+    'database' => getenv('CMS_MARIADB_DATABASE'),
+    'username' => getenv('CMS_MARIADB_USERNAME'),
+    'password' => getenv('CMS_MARIADB_PASSWORD'),
+    'host' => getenv('CMS_MARIADB_HOST_REPLICA_1'),
+  );
+}

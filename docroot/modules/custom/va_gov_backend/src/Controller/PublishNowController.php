@@ -71,8 +71,15 @@ class PublishNowController extends ControllerBase {
     ]);
     $responseArray = print_r($response->toArray(), TRUE);
     $jsonResponse = json_encode($response->toArray(), NULL, 2);
+    $pagePath = "https://dev.va.gov$path";
+    $trimPath = trim($path, '/');
+    $s3Path = "https://console.amazonaws-us-gov.com/s3/buckets/content.dev.va.gov?region=us-gov-west-1&prefix=$trimPath/&showversions=false";
     $message = <<<EOF
 Node $nid ($path) was submitted to the SQS queue.
+
+The S3 bucket objects should be viewable at <a href="$s3Path">$s3Path</a> shortly.
+
+The page should be available at <a href="$pagePath">$pagePath</a> shortly.
 
 The raw data returned from AWS is as follows:
 

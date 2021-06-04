@@ -75,11 +75,11 @@ class PublishNowController extends ControllerBase {
     $trimPath = trim($path, '/');
     $s3Path = "https://console.amazonaws-us-gov.com/s3/buckets/content.dev.va.gov?region=us-gov-west-1&prefix=$trimPath/&showversions=false";
     $message = <<<EOF
-Node $nid ($path) was submitted to the SQS queue.
+<p>Node $nid ($path) was submitted to the SQS queue.</p>
 
-The S3 bucket objects should be viewable at <a href="$s3Path">$s3Path</a> shortly.
+<p>The S3 bucket objects should be viewable at <a href="$s3Path">$s3Path</a> shortly.</p>
 
-The page should be available at <a href="$pagePath">$pagePath</a> shortly.
+<p>The page should be available at <a href="$pagePath">$pagePath</a> shortly.</p>
 
 The raw data returned from AWS is as follows:
 

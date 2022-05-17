@@ -13,7 +13,7 @@ import {
   faPencil, // pencil
   faPlus, // plus
   faThumbsDown, // thumbs down
-  faThumbsUp, // thumbs up
+  faThumbsUp, // trash
   faTrash, // trash
   faTriangleExclamation // warning
 } from '@fortawesome/free-solid-svg-icons';
